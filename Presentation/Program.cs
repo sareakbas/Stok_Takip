@@ -46,6 +46,8 @@ builder.Services.AddDbContext<StokTakipDbContext>(options =>
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<SupplierService>();
 
 var app = builder.Build();
 

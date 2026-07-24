@@ -17,7 +17,12 @@ namespace Business.Services
     
         public async Task<List<Product>> GetAllProductsAsync()
         {
-            return await _context.Products.Where(p => p.IsActive).ToListAsync();
+            return await _context.Products
+                         .Include(p => p.Category) 
+                         .Where(p => p.IsActive)
+                         .ToListAsync();
+            
+
         }
 
         //  Ürün Ekleme ve Barkod Benzersizlik Kontrolü (K-07)
@@ -90,6 +95,27 @@ namespace Business.Services
             
             return (true, "Ürün başarıyla pasife alındı ve listelerden kaldırıldı.");
         }
+
+        // Ürünü Tekrar Aktifleştirme Servisi
+        public async Task<(bool Success, string Message)> ReactivateProductAsync(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return (false, "Aktifleştirilecek ürün bulunamadı.");
+            }
+
+            if (product.IsActive)
+            {
+                return (false, "Bu ürün zaten aktif durumda.");
+            }
+
+            product.IsActive = true;
+            await _context.SaveChangesAsync();
+
+            return(true, "Ürün başarıyla tekrar aktifleştirildi ve lsitelere eklendi.");
+    
+        } 
 
     }
 

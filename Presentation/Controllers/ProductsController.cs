@@ -66,5 +66,18 @@ namespace Presentation.Controllers
             return Ok(new { message = result.Message });
         }
 
+        // 5. TEKRAR AKTİFLEŞTİRME (PUT) - Sadece Admin yapabilir
+        [HttpPut("reactivate/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reactivate(int id)
+        {
+            var result = await _productService.ReactivateProductAsync(id);
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message });
+        }
+
     }
 }
