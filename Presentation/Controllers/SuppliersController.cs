@@ -1,5 +1,6 @@
 using Business.DTOs;
 using Business.Services;
+using Business.Responses; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,32 +21,45 @@ namespace Presentation.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var suppliers = await _supplierService.GetAllSuppliersAsync();
-            return Ok(suppliers);
+            var result = await _supplierService.GetAllSuppliersAsync();
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(CreateSupplierDto dto)
         {
             var result = await _supplierService.CreateSupplierAsync(dto);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
 
         [HttpPut]
         public async Task<IActionResult> Update(UpdateSupplierDto dto)
         {
             var result = await _supplierService.UpdateSupplierAsync(dto);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deactivate(int id)
         {
             var result = await _supplierService.DeactivateSupplierAsync(id);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
     }
 }

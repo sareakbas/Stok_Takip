@@ -1,6 +1,7 @@
 using BCrypt.Net;
 using Business.Dtos;
 using DataAccess;
+using Business.Responses;
 using Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -21,12 +22,12 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public string Register(RegisterDto dto)
+        public Result<bool> Register(RegisterDto dto)
         {
            
             if (_context.Users.Any(u => u.Email == dto.Email))
             {
-                return "Bu e-posta adresi zaten sistemde kayıtlı!";
+                return Result<bool>.ErrorResult(Messages.UserAlreadyExists);
             }
 
             // Yeni kullanıcıların her zaman personel rolüyle başlaması (K-03)
@@ -50,27 +51,28 @@ namespace Business.Services
             _context.Users.Add(newUser);
             _context.SaveChanges();
 
-            return "Kayıt işlemi başarıyla tamamlandı! Yönetici onayından sonra giriş yapabilirsiniz.";
+            return Result<bool>.SuccessResult(true, Messages.UserRegistered);
         }
 
-        public string Login(LoginDto dto)
+        public Result<string> Login(LoginDto dto)
         {
             var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
             if (user == null)
             {
-                return "Hata: Kullanıcı bulunamadı.";
+                return Result<string>.ErrorResult(Messages.UserNotFound);
             }
 
             // Kullanıcının hesabı 5 hatalı girişten dolayı kilitlenmiş mi
             if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.Now)
             {
-                return $"Hata: Hesabınız kilitlendi. Lütfen {user.LockedUntil.Value:HH:mm} sonrasında tekrar deneyin.";
+                string timeString = user.LockedUntil.Value.ToString("HH:mm");
+                return Result<string>.ErrorResult(string.Format(Messages.UserAccountLocked, timeString));
             }
 
             //  Kullanıcı aktif mi 
             if (!user.IsActive)
             {
-                return "Hata: Hesabınız henüz onaylanmamış. Lütfen yöneticinizle iletişime geçin.";
+                return Result<string>.ErrorResult(Messages.UserNotActive);
             }
 
             
@@ -85,11 +87,11 @@ namespace Business.Services
                 {
                     user.LockedUntil = DateTime.Now.AddMinutes(15);
                     _context.SaveChanges();
-                    return "Hata: Üst üste 5 kez hatalı giriş yaptığınız için hesabınız 15 dakika kilitlendi.";
+                    return Result<string>.ErrorResult(Messages.UserLockedDueToFailedAttempts);
                 }
 
                 _context.SaveChanges();
-                return "Hata: Şifre yanlış.";
+                return Result<string>.ErrorResult(Messages.PasswordError);
             }
 
             // şifre baaşrılıysa sayaçlar sıfırlanır
@@ -97,8 +99,10 @@ namespace Business.Services
             user.LockedUntil = null;
             _context.SaveChanges();
 
-            // giriş yapabilen kullanıcıya yeni token üretilir
-            return GenerateJwtToken(user);
+            string token = GenerateJwtToken(user);
+
+            // Başarılıysa Data olarak token'ı veriyoruz
+            return Result<string>.SuccessResult(token, Messages.LoginSuccessful);
         }
 
         // Token Üretme Metodu 

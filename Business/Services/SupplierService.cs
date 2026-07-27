@@ -1,4 +1,5 @@
 using Business.DTOs;
+using Business.Responses; 
 using DataAccess;
 using Entities;
 using Microsoft.EntityFrameworkCore;
@@ -15,14 +16,23 @@ namespace Business.Services
         }
 
         // Listeleme
-        public async Task<List<Supplier>> GetAllSuppliersAsync()
+        public async Task<Result<List<Supplier>>> GetAllSuppliersAsync()
         {
-            return await _context.Suppliers.Where(s => s.IsActive).ToListAsync();
+            var suppliers = await _context.Suppliers.Where(s => s.IsActive).ToListAsync();
+            return Result<List<Supplier>>.SuccessResult(suppliers, Messages.SupplierListed);
         }
 
         // Ekleme
-        public async Task<(bool Success, string Message)> CreateSupplierAsync(CreateSupplierDto dto)
+        public async Task<Result<bool>> CreateSupplierAsync(CreateSupplierDto dto)
         {
+            bool supplierExists = await _context.Suppliers
+                .AnyAsync(s => s.Email == dto.Email || s.Phone == dto.Phone);
+
+            if (supplierExists)
+            {
+                return Result<bool>.ErrorResult(Messages.SupplierAlreadyExists);
+            }
+
             var supplier = new Supplier
             {
                 Name = dto.Name,
@@ -35,16 +45,16 @@ namespace Business.Services
             _context.Suppliers.Add(supplier);
             await _context.SaveChangesAsync();
 
-            return (true, "Tedarikçi başarıyla eklendi.");
+            return Result<bool>.SuccessResult(true, Messages.SupplierAdded);
         }
 
         // Güncelleme
-        public async Task<(bool Success, string Message)> UpdateSupplierAsync(UpdateSupplierDto dto)
+        public async Task<Result<bool>> UpdateSupplierAsync(UpdateSupplierDto dto)
         {
             var supplier = await _context.Suppliers.FindAsync(dto.Id);
             if (supplier == null)
             {
-                return (false, "Güncellenecek tedarikçi bulunamadı.");
+                return Result<bool>.ErrorResult(Messages.SupplierNotFound);
             }
 
             supplier.Name = dto.Name;
@@ -53,22 +63,22 @@ namespace Business.Services
             supplier.Address = dto.Address;
 
             await _context.SaveChangesAsync();
-            return (true, "Tedarikçi başarıyla güncellendi.");
+            return Result<bool>.SuccessResult(true, Messages.SupplierUpdated);
         }
 
         // Pasife Alma (Soft Delete)
-        public async Task<(bool Success, string Message)> DeactivateSupplierAsync(int id)
+        public async Task<Result<bool>> DeactivateSupplierAsync(int id)
         {
             var supplier = await _context.Suppliers.FindAsync(id);
             if (supplier == null)
             {
-                return (false, "Pasife alınacak tedarikçi bulunamadı.");
+                return Result<bool>.ErrorResult(Messages.SupplierNotFound);
             }
 
             supplier.IsActive = false;
             await _context.SaveChangesAsync();
             
-            return (true, "Tedarikçi başarıyla pasife alındı.");
+            return Result<bool>.SuccessResult(true, Messages.SupplierDeleted);
         }
     }
 }

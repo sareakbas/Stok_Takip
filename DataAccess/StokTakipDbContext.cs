@@ -9,21 +9,10 @@ namespace DataAccess
         {
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                // Şifreni güncel docker şifrenle (Sare1234!) değiştirdim.
-                optionsBuilder.UseSqlServer("Server=localhost,1433;Database=StokTakipDB;User Id=sa;Password=Sare1234!;TrustServerCertificate=True;");
-            }
-        }
-
-        // İŞTE EKSİK OLAN VE HATAYI ÇÖZECEK METOT BURASI:
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Cascade döngüsünü engellemek için silme davranışını 'Restrict' olarak ayarlıyoruz.
             modelBuilder.Entity<StockMovementAllocation>()
                 .HasOne(sma => sma.Movement)
                 .WithMany()

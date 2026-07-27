@@ -1,5 +1,6 @@
 using Business.DTOs;
 using Business.Services;
+using Business.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,8 +22,14 @@ namespace Presentation.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var customers = await _customerService.GetAllCustomersAsync();
-            return Ok(customers);
+            var result = await _customerService.GetAllCustomersAsync();
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
 
         // 2. Yeni Müşteri Ekleme (POST: api/customers)
@@ -30,12 +37,13 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Create(CreateCustomerDto dto)
         {
             var result = await _customerService.CreateCustomerAsync(dto);
-            if (!result.Success)
+           
+            if (result.Success)
             {
-                return BadRequest(new { message = result.Message });
+                return Ok(result);
             }
 
-            return Ok(new { message = result.Message });
+            return BadRequest(result);
         }
 
         // 3. Müşteri Güncelleme (PUT: api/customers)
@@ -43,12 +51,12 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Update(UpdateCustomerDto dto)
         {
             var result = await _customerService.UpdateCustomerAsync(dto);
-            if (!result.Success)
+            if (result.Success)
             {
-                return BadRequest(new { message = result.Message });
+                return Ok(result);
             }
 
-            return Ok(new { message = result.Message });
+            return BadRequest(result);
         }
 
         // 4. Müşteriyi Pasife Alma (DELETE: api/customers/{id})
@@ -56,12 +64,12 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Deactivate(int id)
         {
             var result = await _customerService.DeactivateCustomerAsync(id);
-            if (!result.Success)
+            if (result.Success)
             {
-                return BadRequest(new { message = result.Message });
+                return Ok(result);
             }
 
-            return Ok(new { message = result.Message });
+            return BadRequest(result);
         }
     }
 }

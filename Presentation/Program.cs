@@ -48,6 +48,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<SupplierService>();
+builder.Services.AddScoped<StockService>();
+builder.Services.AddScoped<StockService>();
 
 var app = builder.Build();
 

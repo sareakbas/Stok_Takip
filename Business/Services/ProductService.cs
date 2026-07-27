@@ -1,4 +1,5 @@
 using Business.DTOs;
+using Business.Responses; 
 using DataAccess;
 using Entities;
 using Microsoft.EntityFrameworkCore;
@@ -14,30 +15,26 @@ namespace Business.Services
             _context = context;
         }
 
-    
-        public async Task<List<Product>> GetAllProductsAsync()
+        public async Task<Result<List<Product>>> GetAllProductsAsync()
         {
-            return await _context.Products
+            var products = await _context.Products
                          .Include(p => p.Category) 
                          .Where(p => p.IsActive)
                          .ToListAsync();
             
-
+            return Result<List<Product>>.SuccessResult(products, Messages.ProductListed);
         }
 
-        //  Ürün Ekleme ve Barkod Benzersizlik Kontrolü (K-07)
-        public async Task<(bool Success, string Message)> CreateProductAsync(CreateProductDto dto)
+        public async Task<Result<bool>> CreateProductAsync(CreateProductDto dto)
         {
-            
             var existingProduct = await _context.Products
                 .FirstOrDefaultAsync(p => p.Barcode == dto.Barcode);
 
             if (existingProduct != null)
             {
-                return (false, "Bu barkoda sahip bir ürün zaten mevcut. Aynı barkodla ikinci bir ürün eklenemez.");
+                return Result<bool>.ErrorResult(Messages.ProductBarcodeAlreadyExists);
             }
 
-           
             var product = new Product
             {
                 Name = dto.Name,
@@ -51,15 +48,15 @@ namespace Business.Services
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return (true, "Ürün başarıyla eklendi.");
+            return Result<bool>.SuccessResult(true, Messages.ProductAdded);
         }
 
-        public async Task<(bool Success, string Message)> UpdateProductAsync(UpdateProductDto dto)
+        public async Task<Result<bool>> UpdateProductAsync(UpdateProductDto dto)
         {
             var product = await _context.Products.FindAsync(dto.Id);
             if (product == null)
             {
-                return (false, "Güncellenecek ürün bulunamadı.");
+                return Result<bool>.ErrorResult(Messages.ProductNotFound);
             }
 
             if (product.Barcode != dto.Barcode)
@@ -67,7 +64,7 @@ namespace Business.Services
                 var barcodeExists = await _context.Products.AnyAsync(p => p.Barcode == dto.Barcode);
                 if (barcodeExists)
                 {
-                    return (false, "Bu barkod başka bir ürün tarafından kullanılıyor.");
+                    return Result<bool>.ErrorResult(Messages.ProductBarcodeUsedByAnother);
                 }
             }
 
@@ -78,45 +75,40 @@ namespace Business.Services
             product.MinStockLevel = dto.MinStockLevel;
 
             await _context.SaveChangesAsync();
-            return (true, "Ürün başarıyla güncellendi.");
+            return Result<bool>.SuccessResult(true, Messages.ProductUpdated);
         }
 
-        // Ürünü Pasife Alma Servisi (Soft Delete)
-        public async Task<(bool Success, string Message)> DeactivateProductAsync(int id)
+        public async Task<Result<bool>> DeactivateProductAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return (false, "Pasife alınacak ürün bulunamadı.");
+                return Result<bool>.ErrorResult(Messages.ProductNotFound);
             }
 
             product.IsActive = false;
             await _context.SaveChangesAsync();
             
-            return (true, "Ürün başarıyla pasife alındı ve listelerden kaldırıldı.");
+            return Result<bool>.SuccessResult(true, Messages.ProductDeactivated);
         }
 
-        // Ürünü Tekrar Aktifleştirme Servisi
-        public async Task<(bool Success, string Message)> ReactivateProductAsync(int id)
+        public async Task<Result<bool>> ReactivateProductAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return (false, "Aktifleştirilecek ürün bulunamadı.");
+                return Result<bool>.ErrorResult(Messages.ProductNotFound);
             }
 
             if (product.IsActive)
             {
-                return (false, "Bu ürün zaten aktif durumda.");
+                return Result<bool>.ErrorResult(Messages.ProductAlreadyActive);
             }
 
             product.IsActive = true;
             await _context.SaveChangesAsync();
 
-            return(true, "Ürün başarıyla tekrar aktifleştirildi ve lsitelere eklendi.");
-    
+            return Result<bool>.SuccessResult(true, Messages.ProductReactivated);
         } 
-
     }
-
 }
