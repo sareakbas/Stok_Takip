@@ -1,7 +1,9 @@
-using Business.Dtos;
-using Business.Responses; 
-using DataAccess;
 using Entities;
+using Business.Dtos;
+using DataAccess;
+using System;
+using System.Threading.Tasks;
+using Business.Responses;
 
 namespace Business.Services
 {
@@ -14,43 +16,59 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<Result<bool>> CreateStockEntryAsync(CreateStockEntryDto dto)
+      public async Task<Result<bool>> CreateStockEntryAsync(StockEntryDto dto, int userId)
         {
-            var product = await _context.Products.FindAsync(dto.ProductId);
-            if (product == null || !product.IsActive)
+            
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                return Result<bool>.ErrorResult(Messages.StockEntryProductNotFound);
+
+                var product = await _context.Products.FindAsync(dto.ProductId);
+                if (product == null || !product.IsActive)
+                {
+                    return Result<bool>.ErrorResult(Messages.StockEntryProductNotFound);
+                }
+
+
+                // Yeni Parti (Lot) Oluşturma (K-10 Kuralı)
+                var newLot = new StockLot
+                {
+                    ProductId = dto.ProductId,
+                    SupplierId = dto.SupplierId,
+                    EntryDate = DateTime.Now,
+                    InitialQuantity = dto.Quantity,
+                    RemainingQuantity = dto.Quantity, 
+                    UnitCost = dto.UnitCost
+                };
+                
+                await _context.StockLots.AddAsync(newLot);
+
+                // Stok Hareketi (Log/Geçmiş) Oluşturma
+                var stockMovement = new StockMovement
+                {
+                    ProductId = dto.ProductId,
+                    MovementType = "IN", 
+                    Quantity = dto.Quantity,
+                    UnitPrice = dto.UnitCost,
+                    MovementDate = DateTime.Now,
+                    CreatedById = userId
+                };
+
+                await _context.StockMovements.AddAsync(stockMovement);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                string successMessage = string.Format(Messages.StockEntrySuccessful, product.Name, dto.Quantity);
+                return Result<bool>.SuccessResult(true, successMessage);
             }
 
-            var stockLot = new StockLot
+            catch (Exception ex)
             {
-                ProductId = dto.ProductId,
-                SupplierId = dto.SupplierId,
-                EntryDate = DateTime.Now,
-                InitialQuantity = dto.Quantity,
-                RemainingQuantity = dto.Quantity,
-                UnitCost = dto.UnitCost
-            };
-
-            _context.StockLots.Add(stockLot);
-
-            var stockMovement = new StockMovement
-            {
-                ProductId = dto.ProductId,
-                MovementType = "IN",
-                Quantity = dto.Quantity,
-                UnitPrice = dto.UnitCost,
-                MovementDate = DateTime.Now
-            };
-
-            _context.StockMovements.Add(stockMovement);
-
-            await _context.SaveChangesAsync();
-
-            // string.Format ile {0} yerine ürün adını, {1} yerine miktarı gönderiyoruz
-            string successMessage = string.Format(Messages.StockEntrySuccessful, product.Name, dto.Quantity);
-            
-            return Result<bool>.SuccessResult(true, successMessage);
+                await transaction.RollbackAsync();
+                string errorMessage = string.Format(Messages.StockEntryFailed, ex.Message);
+                return Result<bool>.ErrorResult(errorMessage);
+            }
         }
     }
 }

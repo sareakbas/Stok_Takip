@@ -3,6 +3,7 @@ using Business.Services;
 using Business.Responses; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Presentation.Controllers
 {
@@ -20,16 +21,24 @@ namespace Presentation.Controllers
 
         // Stok Girişi (POST: api/stocks/entry)
         [HttpPost("entry")]
-        public async Task<IActionResult> CreateStockEntry(CreateStockEntryDto dto)
+        public async Task<IActionResult> CreateStockEntry(StockEntryDto dto)
         {
-            var result = await _stockService.CreateStockEntryAsync(dto);
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            if (!result.Success)
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
             {
-                return BadRequest(result);
+                return Unauthorized(Result<bool>.ErrorResult(Messages.UnauthorizedAccess));
             }
 
-            return Ok(result);
+            var result = await _stockService.CreateStockEntryAsync(dto, userId);
+            
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
     }
 }

@@ -19,6 +19,7 @@ namespace Business.Responses
         public const string UserLockedDueToFailedAttempts = "Üst üste 5 kez hatalı giriş yaptığınız için hesabınız 15 dakika kilitlendi.";
         public const string PasswordError = "Şifre yanlış.";
         public const string LoginSuccessful = "Giriş başarılı.";
+        public const string UnauthorizedAccess = "Yetkisiz işlem. Geçerli bir kullanıcı bulunamadı.";
 
         // Ürün (Product) Mesajları
         public const string ProductListed = "Ürünler başarıyla listelendi.";
@@ -42,6 +43,7 @@ namespace Business.Responses
         // Stok (Stock) Mesajları
         public const string StockEntryProductNotFound = "Aktif bir ürün bulunamadı. Stok girişi yapılamaz.";
         public const string StockEntrySuccessful = "{0} için {1} adet stok girişi başarıyla yapıldı ve Lot oluşturuldu.";
+        public const string StockEntryFailed = "Stok girişi sırasında beklenmeyen sistemsel bir hata oluştu: {0}";
 
     }
 }

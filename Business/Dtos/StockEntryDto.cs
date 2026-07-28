@@ -1,6 +1,6 @@
 namespace Business.Dtos
 {
-    public class CreateStockEntryDto
+    public class StockEntryDto
     {
         public int ProductId { get; set; }
         public int SupplierId { get; set; }
