@@ -40,10 +40,16 @@ namespace Business.Responses
         public const string SupplierUpdated = "Tedarikçi başarıyla güncellendi.";
         public const string SupplierDeleted = "Tedarikçi başarıyla pasife alındı.";
 
-        // Stok (Stock) Mesajları
+        // Stok Mesajları
         public const string StockEntryProductNotFound = "Aktif bir ürün bulunamadı. Stok girişi yapılamaz.";
         public const string StockEntrySuccessful = "{0} için {1} adet stok girişi başarıyla yapıldı ve Lot oluşturuldu.";
         public const string StockEntryFailed = "Stok girişi sırasında beklenmeyen sistemsel bir hata oluştu: {0}";
+
+        // Stok Çıkış Mesajları
+        public const string StockOutProductNotFound = "İşlem yapılmak istenen ürün bulunamadı veya aktif değil.";
+        public const string InsufficientStock = "Stokta yeterli ürün yok. Mevcut Stok: {0}, İstenen: {1}";
+        public const string StockOutSuccessful = "{0} için {1} adet stok çıkışı başarıyla yapıldı.";
+        public const string StockOutFailed = "Stok çıkışı sırasında bir hata oluştu: {0}";
 
     }
 }

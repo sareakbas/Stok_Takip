@@ -2,6 +2,7 @@ using Entities;
 using Business.Dtos;
 using DataAccess;
 using System;
+using System.Linq; 
 using System.Threading.Tasks;
 using Business.Responses;
 
@@ -16,20 +17,18 @@ namespace Business.Services
             _context = context;
         }
 
-      public async Task<Result<bool>> CreateStockEntryAsync(StockEntryDto dto, int userId)
+        // Stok Girişi (Alış)
+        public async Task<Result<bool>> CreateStockEntryAsync(StockEntryDto dto, int userId)
         {
-            
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-
                 var product = await _context.Products.FindAsync(dto.ProductId);
                 if (product == null || !product.IsActive)
                 {
                     return Result<bool>.ErrorResult(Messages.StockEntryProductNotFound);
                 }
-
 
                 // Yeni Parti (Lot) Oluşturma (K-10 Kuralı)
                 var newLot = new StockLot
@@ -62,12 +61,93 @@ namespace Business.Services
                 string successMessage = string.Format(Messages.StockEntrySuccessful, product.Name, dto.Quantity);
                 return Result<bool>.SuccessResult(true, successMessage);
             }
-
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 string errorMessage = string.Format(Messages.StockEntryFailed, ex.Message);
                 return Result<bool>.ErrorResult(errorMessage);
+            }
+        }
+
+        // Stok Çıkışı (Satış) ve FIFO Algoritması
+        public async Task<Result<bool>> CreateStockOutAsync(StockOutDto dto, int userId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Ürünü Kontrol Et
+                var product = await _context.Products.FindAsync(dto.ProductId);
+                if (product == null || !product.IsActive)
+                {
+                    return Result<bool>.ErrorResult(Messages.StockOutProductNotFound);
+                }
+
+                // 2. Toplam Stok Yeterliliğini Kontrol Et
+                var totalAvailableStock = _context.StockLots
+                    .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
+                    .Sum(l => l.RemainingQuantity);
+
+                if (totalAvailableStock < dto.Quantity)
+                {
+                    string errorMessage = string.Format(Messages.InsufficientStock, totalAvailableStock, dto.Quantity);
+                    return Result<bool>.ErrorResult(errorMessage);
+                }
+
+                // 3. FIFO ALGORİTMASI: Partileri tarihe göre en eskiden yeniye doğru sırala
+                var availableLots = _context.StockLots
+                    .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
+                    .OrderBy(l => l.EntryDate) 
+                    .ToList();
+
+                decimal remainingQuantityToDeduct = dto.Quantity; 
+
+                // Döngüyle Lot'ları sırayla eritiyoruz
+                foreach (var lot in availableLots)
+                {
+                    if (remainingQuantityToDeduct <= 0) 
+                        break; // Düşülecek miktar kalmadıysa döngüden çık
+
+                    if (lot.RemainingQuantity >= remainingQuantityToDeduct)
+                    {
+                        // Bu partinin stoğu, ihtiyacı karşılıyor
+                        lot.RemainingQuantity -= remainingQuantityToDeduct;
+                        remainingQuantityToDeduct = 0;
+                    }
+                    else
+                    {
+                        // Bu partinin stoğu yetmiyor, içindeki her şeyi alıp partiyi sıfırlıyoruz
+                        remainingQuantityToDeduct -= lot.RemainingQuantity;
+                        lot.RemainingQuantity = 0; 
+                    }
+
+                    _context.StockLots.Update(lot);
+                }
+
+                // 4. Stok Çıkış (OUT) Hareketini Kaydet
+                var stockMovement = new StockMovement
+                {
+                    ProductId = dto.ProductId,
+                    CustomerId = dto.CustomerId, 
+                    MovementType = "OUT", 
+                    Quantity = dto.Quantity,
+                    UnitPrice = dto.UnitPrice, 
+                    MovementDate = DateTime.Now,
+                    CreatedById = userId
+                };
+
+                await _context.StockMovements.AddAsync(stockMovement);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+               string successMessage = string.Format(Messages.StockOutSuccessful, product.Name, dto.Quantity);
+               return Result<bool>.SuccessResult(true, successMessage);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                string exceptionMessage = string.Format(Messages.StockOutFailed, ex.Message);
+                return Result<bool>.ErrorResult(exceptionMessage);
             }
         }
     }

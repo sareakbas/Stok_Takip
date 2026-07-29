@@ -4,6 +4,7 @@ using Business.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -23,7 +24,6 @@ namespace Presentation.Controllers
         [HttpPost("entry")]
         public async Task<IActionResult> CreateStockEntry(StockEntryDto dto)
         {
-
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
@@ -32,6 +32,29 @@ namespace Presentation.Controllers
             }
 
             var result = await _stockService.CreateStockEntryAsync(dto, userId);
+            
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        // Stok Çıkışı (POST: api/stocks/out)
+        [HttpPost("out")]
+        public async Task<IActionResult> CreateStockOut([FromBody] StockOutDto dto)
+        {
+            
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            {
+                return Unauthorized(Result<bool>.ErrorResult(Messages.UnauthorizedAccess));
+            }
+
+
+            var result = await _stockService.CreateStockOutAsync(dto, userId);
             
             if (result.Success)
             {
