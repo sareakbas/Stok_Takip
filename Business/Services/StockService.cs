@@ -94,37 +94,7 @@ namespace Business.Services
                     return Result<bool>.ErrorResult(errorMessage);
                 }
 
-                // 3. FIFO ALGORİTMASI: Partileri tarihe göre en eskiden yeniye doğru sırala
-                var availableLots = _context.StockLots
-                    .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
-                    .OrderBy(l => l.EntryDate) 
-                    .ToList();
-
-                decimal remainingQuantityToDeduct = dto.Quantity; 
-
-                // Döngüyle Lot'ları sırayla eritiyoruz
-                foreach (var lot in availableLots)
-                {
-                    if (remainingQuantityToDeduct <= 0) 
-                        break; // Düşülecek miktar kalmadıysa döngüden çık
-
-                    if (lot.RemainingQuantity >= remainingQuantityToDeduct)
-                    {
-                        // Bu partinin stoğu, ihtiyacı karşılıyor
-                        lot.RemainingQuantity -= remainingQuantityToDeduct;
-                        remainingQuantityToDeduct = 0;
-                    }
-                    else
-                    {
-                        // Bu partinin stoğu yetmiyor, içindeki her şeyi alıp partiyi sıfırlıyoruz
-                        remainingQuantityToDeduct -= lot.RemainingQuantity;
-                        lot.RemainingQuantity = 0; 
-                    }
-
-                    _context.StockLots.Update(lot);
-                }
-
-                // 4. Stok Çıkış (OUT) Hareketini Kaydet
+                // 3. Stok Çıkış (OUT) Hareketini ÖNCE Kaydet (MovementId'yi alabilmek için)
                 var stockMovement = new StockMovement
                 {
                     ProductId = dto.ProductId,
@@ -137,6 +107,54 @@ namespace Business.Services
                 };
 
                 await _context.StockMovements.AddAsync(stockMovement);
+                await _context.SaveChangesAsync(); // Bu satır çalıştığında SQL, stockMovement.Id değerini üretir.
+
+                var availableLots = _context.StockLots
+                    .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
+                    .OrderBy(l => l.EntryDate) 
+                    .ToList();
+
+                decimal remainingQuantityToDeduct = dto.Quantity; 
+
+                
+                foreach (var lot in availableLots)
+                {
+                    if (remainingQuantityToDeduct <= 0) 
+                        break; // Düşülecek miktar kalmadıysa döngüden çık
+
+                    // Bu partiden ne kadar düşeceğimizi tutacak geçici değişken
+                    decimal deductedAmount = 0;
+
+                    if (lot.RemainingQuantity >= remainingQuantityToDeduct)
+                    {
+                        // Bu partinin stoğu, ihtiyacı karşılıyor
+                        deductedAmount = remainingQuantityToDeduct;
+                        lot.RemainingQuantity -= remainingQuantityToDeduct;
+                        remainingQuantityToDeduct = 0;
+                    }
+                    else
+                    {
+                        // Bu partinin stoğu yetmiyor, içindeki her şeyi alıp partiyi sıfırlıyoruz
+                        deductedAmount = lot.RemainingQuantity;
+                        remainingQuantityToDeduct -= lot.RemainingQuantity;
+                        lot.RemainingQuantity = 0; 
+                    }
+
+                    _context.StockLots.Update(lot);
+
+                    // 5. ALLOCATION (Dağıtım) Kaydını Oluştur
+                    var allocation = new StockMovementAllocation
+                    {
+                        MovementId = stockMovement.Id, 
+                        LotId = lot.Id,                
+                        Quantity = deductedAmount,    
+                        UnitCost = lot.UnitCost       
+                    };
+
+                    await _context.StockMovementAllocations.AddAsync(allocation);
+                }
+
+                
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 

@@ -37,7 +37,7 @@ namespace Business.Services
             //  Şifreler BCrypt ile hashlenir (K-01)
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-            // Yeni kullanıcıyı oluşturuyoruz
+            
             var newUser = new User
             {
                 FullName = dto.FullName,
@@ -69,7 +69,7 @@ namespace Business.Services
                 return Result<string>.ErrorResult(string.Format(Messages.UserAccountLocked, timeString));
             }
 
-            //  Kullanıcı aktif mi 
+           
             if (!user.IsActive)
             {
                 return Result<string>.ErrorResult(Messages.UserNotActive);
@@ -78,7 +78,7 @@ namespace Business.Services
             
             bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
-            //şifre hatalıysa uygulanacak kurallar
+            
             if (!isPasswordCorrect)
             {
                 user.FailedLoginCount++;
