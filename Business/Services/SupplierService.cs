@@ -3,6 +3,7 @@ using Business.Responses;
 using DataAccess;
 using Entities;
 using Microsoft.EntityFrameworkCore;
+using Business.Exceptions;
 
 namespace Business.Services
 {
@@ -19,7 +20,8 @@ namespace Business.Services
         public async Task<Result<List<Supplier>>> GetAllSuppliersAsync()
         {
             var suppliers = await _context.Suppliers.Where(s => s.IsActive).ToListAsync();
-            return Result<List<Supplier>>.SuccessResult(suppliers, Messages.SupplierListed);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_SUP_001");
+            return Result<List<Supplier>>.SuccessResult(suppliers, successRecord?.MessageTr ?? "");
         }
 
         // Ekleme
@@ -30,7 +32,7 @@ namespace Business.Services
 
             if (supplierExists)
             {
-                return Result<bool>.ErrorResult(Messages.SupplierAlreadyExists);
+               throw new BusinessException("ERR_SUP_001");
             }
 
             var supplier = new Supplier
@@ -45,7 +47,8 @@ namespace Business.Services
             _context.Suppliers.Add(supplier);
             await _context.SaveChangesAsync();
 
-            return Result<bool>.SuccessResult(true, Messages.SupplierAdded);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_SUP_002");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         // Güncelleme
@@ -54,7 +57,7 @@ namespace Business.Services
             var supplier = await _context.Suppliers.FindAsync(dto.Id);
             if (supplier == null)
             {
-                return Result<bool>.ErrorResult(Messages.SupplierNotFound);
+                throw new BusinessException("ERR_SUP_002");
             }
 
             supplier.Name = dto.Name;
@@ -63,7 +66,8 @@ namespace Business.Services
             supplier.Address = dto.Address;
 
             await _context.SaveChangesAsync();
-            return Result<bool>.SuccessResult(true, Messages.SupplierUpdated);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_SUP_003");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         // Pasife Alma (Soft Delete)
@@ -72,13 +76,14 @@ namespace Business.Services
             var supplier = await _context.Suppliers.FindAsync(id);
             if (supplier == null)
             {
-                return Result<bool>.ErrorResult(Messages.SupplierNotFound);
+               throw new BusinessException("ERR_SUP_002");
             }
 
             supplier.IsActive = false;
             await _context.SaveChangesAsync();
             
-            return Result<bool>.SuccessResult(true, Messages.SupplierDeleted);
+           var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_SUP_004");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
     }
 }

@@ -3,6 +3,7 @@ using Business.Responses;
 using DataAccess;
 using Entities;
 using Microsoft.EntityFrameworkCore;
+using Business.Exceptions;
 
 namespace Business.Services
 {
@@ -20,7 +21,8 @@ namespace Business.Services
         {
            var customers = await _context.Customers.Where(c => c.IsActive).ToListAsync();
             
-            return Result<List<Customer>>.SuccessResult(customers, Messages.CustomerListed);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_CUS_001");
+            return Result<List<Customer>>.SuccessResult(customers, successRecord?.MessageTr ?? "");
         }
 
         // Ekleme
@@ -32,7 +34,7 @@ namespace Business.Services
 
             if (customerExists)
             {
-                return Result<bool>.ErrorResult(Messages.CustomerAlreadyExists);
+                throw new BusinessException("ERR_CUS_001");
             }
 
             var customer = new Customer
@@ -47,7 +49,8 @@ namespace Business.Services
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            return Result<bool>.SuccessResult(true, Messages.CustomerAdded);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_CUS_002");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         // Güncelleme
@@ -56,7 +59,7 @@ namespace Business.Services
             var customer = await _context.Customers.FindAsync(dto.Id);
             if (customer == null)
             {
-               return Result<bool>.ErrorResult(Messages.CustomerNotFound);
+               throw new BusinessException("ERR_CUS_002");
             }
 
             customer.Name = dto.Name;
@@ -65,7 +68,8 @@ namespace Business.Services
             customer.Address = dto.Address;
 
             await _context.SaveChangesAsync();
-            return Result<bool>.SuccessResult(true, Messages.CustomerUpdated);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_CUS_003");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         // Pasife Alma (Soft Delete K-18)
@@ -74,13 +78,14 @@ namespace Business.Services
             var customer = await _context.Customers.FindAsync(id);
             if (customer == null)
             {
-                return Result<bool>.ErrorResult(Messages.CustomerNotFound);
+               throw new BusinessException("ERR_CUS_002");
             }
 
             customer.IsActive = false;
             await _context.SaveChangesAsync();
             
-            return Result<bool>.SuccessResult(true, Messages.CustomerDeleted);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_CUS_004");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
     }
 }

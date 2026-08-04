@@ -3,6 +3,7 @@ using Business.Services;
 using Business.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -23,13 +24,7 @@ namespace Presentation.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _customerService.GetAllCustomersAsync();
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(result);
         }
 
         // 2. Yeni Müşteri Ekleme (POST: api/customers)
@@ -37,13 +32,7 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Create(CreateCustomerDto dto)
         {
             var result = await _customerService.CreateCustomerAsync(dto);
-           
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(result);
         }
 
         // 3. Müşteri Güncelleme (PUT: api/customers)
@@ -51,12 +40,7 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Update(UpdateCustomerDto dto)
         {
             var result = await _customerService.UpdateCustomerAsync(dto);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(result);
         }
 
         // 4. Müşteriyi Pasife Alma (DELETE: api/customers/{id})
@@ -64,12 +48,7 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Deactivate(int id)
         {
             var result = await _customerService.DeactivateCustomerAsync(id);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(result);
         }
     }
 }

@@ -28,17 +28,12 @@ namespace Presentation.Controllers
             
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
             {
-                return Unauthorized(Result<bool>.ErrorResult(Messages.UnauthorizedAccess));
+                return Unauthorized();
             }
 
             var result = await _stockService.CreateStockEntryAsync(dto, userId);
             
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+             return Ok(result);
         }
 
         // Stok Çıkışı (POST: api/stocks/out)
@@ -50,18 +45,13 @@ namespace Presentation.Controllers
             
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
             {
-                return Unauthorized(Result<bool>.ErrorResult(Messages.UnauthorizedAccess));
+                return Unauthorized();
             }
 
 
             var result = await _stockService.CreateStockOutAsync(dto, userId);
             
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(result);
         }
     }
 }

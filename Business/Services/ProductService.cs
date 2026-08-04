@@ -3,6 +3,7 @@ using Business.Responses;
 using DataAccess;
 using Entities;
 using Microsoft.EntityFrameworkCore;
+using Business.Exceptions;
 
 namespace Business.Services
 {
@@ -22,7 +23,8 @@ namespace Business.Services
                          .Where(p => p.IsActive)
                          .ToListAsync();
             
-            return Result<List<Product>>.SuccessResult(products, Messages.ProductListed);
+           var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_PRD_001");
+            return Result<List<Product>>.SuccessResult(products, successRecord?.MessageTr ?? "");
         }
 
         public async Task<Result<bool>> CreateProductAsync(CreateProductDto dto)
@@ -32,7 +34,7 @@ namespace Business.Services
 
             if (existingProduct != null)
             {
-                return Result<bool>.ErrorResult(Messages.ProductBarcodeAlreadyExists);
+                throw new BusinessException("ERR_PRD_001");
             }
 
             var product = new Product
@@ -48,7 +50,8 @@ namespace Business.Services
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return Result<bool>.SuccessResult(true, Messages.ProductAdded);
+           var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_PRD_002");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         public async Task<Result<bool>> UpdateProductAsync(UpdateProductDto dto)
@@ -56,7 +59,7 @@ namespace Business.Services
             var product = await _context.Products.FindAsync(dto.Id);
             if (product == null)
             {
-                return Result<bool>.ErrorResult(Messages.ProductNotFound);
+                throw new BusinessException("ERR_PRD_002");
             }
 
             if (product.Barcode != dto.Barcode)
@@ -64,7 +67,7 @@ namespace Business.Services
                 var barcodeExists = await _context.Products.AnyAsync(p => p.Barcode == dto.Barcode);
                 if (barcodeExists)
                 {
-                    return Result<bool>.ErrorResult(Messages.ProductBarcodeUsedByAnother);
+                    throw new BusinessException("ERR_PRD_003");
                 }
             }
 
@@ -75,7 +78,8 @@ namespace Business.Services
             product.MinStockLevel = dto.MinStockLevel;
 
             await _context.SaveChangesAsync();
-            return Result<bool>.SuccessResult(true, Messages.ProductUpdated);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_PRD_003");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         public async Task<Result<bool>> DeactivateProductAsync(int id)
@@ -83,13 +87,14 @@ namespace Business.Services
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return Result<bool>.ErrorResult(Messages.ProductNotFound);
+                throw new BusinessException("ERR_PRD_002");
             }
 
             product.IsActive = false;
             await _context.SaveChangesAsync();
             
-            return Result<bool>.SuccessResult(true, Messages.ProductDeactivated);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_PRD_004");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
         public async Task<Result<bool>> ReactivateProductAsync(int id)
@@ -97,18 +102,19 @@ namespace Business.Services
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return Result<bool>.ErrorResult(Messages.ProductNotFound);
+                throw new BusinessException("ERR_PRD_002");
             }
 
             if (product.IsActive)
             {
-                return Result<bool>.ErrorResult(Messages.ProductAlreadyActive);
+                throw new BusinessException("ERR_PRD_004");
             }
 
             product.IsActive = true;
             await _context.SaveChangesAsync();
 
-            return Result<bool>.SuccessResult(true, Messages.ProductReactivated);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_PRD_005");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         } 
     }
 }

@@ -35,5 +35,6 @@ namespace DataAccess
         public DbSet<StockMovementAllocation> StockMovementAllocations { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<ErrorMessage> ErrorMessages { get; set; }
     }
 }

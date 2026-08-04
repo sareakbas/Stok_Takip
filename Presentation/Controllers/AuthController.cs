@@ -2,6 +2,7 @@ using Business.Dtos;
 using Business.Services;
 using Business.Responses;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -18,31 +19,23 @@ namespace Presentation.Controllers
 
         // İstek Adresi: POST api/auth/register
         [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var result = _authService.Register(dto);
-            
-            if (result.Success)
-            {
-                return Ok(result); 
-            }
+            var result = await _authService.Register(dto);
 
-            return BadRequest(result);
+                return Ok(result); 
+           
         }
 
         // İstek Adresi: POST api/auth/login
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             
-            var result = _authService.Login(dto);
+            var result = await _authService.Login(dto);
             
-            if (result.Success)
-            {
                 return Ok(result);
-            }
-                
-            return BadRequest(result);
+           
         }
     }
 }

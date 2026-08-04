@@ -5,6 +5,8 @@ using System;
 using System.Linq; 
 using System.Threading.Tasks;
 using Business.Responses;
+using Business.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Business.Services
 {
@@ -22,13 +24,11 @@ namespace Business.Services
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            try
+            var product = await _context.Products.FindAsync(dto.ProductId);
+            if (product == null || !product.IsActive)
             {
-                var product = await _context.Products.FindAsync(dto.ProductId);
-                if (product == null || !product.IsActive)
-                {
-                    return Result<bool>.ErrorResult(Messages.StockEntryProductNotFound);
-                }
+                throw new BusinessException("ERR_STK_001");
+            }
 
                 // Yeni Parti (Lot) Oluşturma (K-10 Kuralı)
                 var newLot = new StockLot
@@ -58,44 +58,39 @@ namespace Business.Services
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                string successMessage = string.Format(Messages.StockEntrySuccessful, product.Name, dto.Quantity);
-                return Result<bool>.SuccessResult(true, successMessage);
+               var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_STK_001");
+               string template = successRecord?.MessageTr ?? "";
+               string successMessage = string.IsNullOrEmpty(template) ? "" : string.Format(template, product.Name, dto.Quantity);
+           
+               return Result<bool>.SuccessResult(true, successMessage);
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                string errorMessage = string.Format(Messages.StockEntryFailed, ex.Message);
-                return Result<bool>.ErrorResult(errorMessage);
-            }
-        }
+           
 
         // Stok Çıkışı (Satış) ve FIFO Algoritması
         public async Task<Result<bool>> CreateStockOutAsync(StockOutDto dto, int userId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            try
+        
+            // 1. Ürünü Kontrol Et
+            var product = await _context.Products.FindAsync(dto.ProductId);
+            if (product == null || !product.IsActive)
             {
-                // 1. Ürünü Kontrol Et
-                var product = await _context.Products.FindAsync(dto.ProductId);
-                if (product == null || !product.IsActive)
-                {
-                    return Result<bool>.ErrorResult(Messages.StockOutProductNotFound);
-                }
+                throw new BusinessException("ERR_STK_002");
+            }
 
-                // 2. Toplam Stok Yeterliliğini Kontrol Et
-                var totalAvailableStock = _context.StockLots
+            // 2. Toplam Stok Yeterliliğini Kontrol Et
+            var totalAvailableStock = _context.StockLots
                     .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
                     .Sum(l => l.RemainingQuantity);
 
                 if (totalAvailableStock < dto.Quantity)
                 {
-                    string errorMessage = string.Format(Messages.InsufficientStock, totalAvailableStock, dto.Quantity);
-                    return Result<bool>.ErrorResult(errorMessage);
+                    throw new BusinessException("ERR_STK_004", totalAvailableStock, dto.Quantity);
                 }
 
-                // 3. Stok Çıkış (OUT) Hareketini ÖNCE Kaydet (MovementId'yi alabilmek için)
-                var stockMovement = new StockMovement
+            // 3. Stok Çıkış (OUT) Hareketini ÖNCE Kaydet (MovementId'yi alabilmek için)
+            var stockMovement = new StockMovement
                 {
                     ProductId = dto.ProductId,
                     CustomerId = dto.CustomerId, 
@@ -109,12 +104,12 @@ namespace Business.Services
                 await _context.StockMovements.AddAsync(stockMovement);
                 await _context.SaveChangesAsync(); // Bu satır çalıştığında SQL, stockMovement.Id değerini üretir.
 
-                var availableLots = _context.StockLots
+            var availableLots = _context.StockLots
                     .Where(l => l.ProductId == dto.ProductId && l.RemainingQuantity > 0)
                     .OrderBy(l => l.EntryDate) 
                     .ToList();
 
-                decimal remainingQuantityToDeduct = dto.Quantity; 
+            decimal remainingQuantityToDeduct = dto.Quantity; 
 
                 
                 foreach (var lot in availableLots)
@@ -158,15 +153,11 @@ namespace Business.Services
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-               string successMessage = string.Format(Messages.StockOutSuccessful, product.Name, dto.Quantity);
+               var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_STK_002");
+               string template = successRecord?.MessageTr ?? "";
+               string successMessage = string.IsNullOrEmpty(template) ? "" : string.Format(template, product.Name, dto.Quantity);
+            
                return Result<bool>.SuccessResult(true, successMessage);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                string exceptionMessage = string.Format(Messages.StockOutFailed, ex.Message);
-                return Result<bool>.ErrorResult(exceptionMessage);
-            }
         }
     }
 }

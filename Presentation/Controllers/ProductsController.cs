@@ -3,6 +3,8 @@ using Business.Services;
 using Business.Responses; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+
 
 namespace Presentation.Controllers
 {
@@ -23,13 +25,7 @@ namespace Presentation.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _productService.GetAllProductsAsync();
-            
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            
+            var result = await _productService.GetAllProductsAsync();            
             return Ok(result);
         }
 
@@ -39,12 +35,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
             var result = await _productService.CreateProductAsync(dto);
-            
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
             return Ok(result);
         }
      
@@ -53,13 +43,7 @@ namespace Presentation.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateProductDto dto)
         {
-            var result = await _productService.UpdateProductAsync(dto);
-            
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            
+            var result = await _productService.UpdateProductAsync(dto); 
             return Ok(result);
         }
 
@@ -70,12 +54,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _productService.DeactivateProductAsync(id);
-            
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            
             return Ok(result);
         }
 
@@ -85,12 +63,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Reactivate(int id)
         {
             var result = await _productService.ReactivateProductAsync(id);
-            
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            
             return Ok(result);
         }
     }

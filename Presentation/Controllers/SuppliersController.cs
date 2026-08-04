@@ -3,6 +3,7 @@ using Business.Services;
 using Business.Responses; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -22,10 +23,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _supplierService.GetAllSuppliersAsync();
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result);
         }
 
@@ -33,10 +30,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Create(CreateSupplierDto dto)
         {
             var result = await _supplierService.CreateSupplierAsync(dto);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result);
         }
 
@@ -44,10 +37,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Update(UpdateSupplierDto dto)
         {
             var result = await _supplierService.UpdateSupplierAsync(dto);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result);
         }
 
@@ -55,10 +44,6 @@ namespace Presentation.Controllers
         public async Task<IActionResult> Deactivate(int id)
         {
             var result = await _supplierService.DeactivateSupplierAsync(id);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result);
         }
     }

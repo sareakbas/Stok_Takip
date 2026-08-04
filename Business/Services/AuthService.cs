@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Business.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Business.Services
 {
@@ -22,12 +24,12 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public Result<bool> Register(RegisterDto dto)
+        public async Task<Result<bool>> Register(RegisterDto dto)
         {
            
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             {
-                return Result<bool>.ErrorResult(Messages.UserAlreadyExists);
+              throw new BusinessException("ERR_ATH_001");
             }
 
             // Yeni kullanıcıların her zaman personel rolüyle başlaması (K-03)
@@ -49,30 +51,31 @@ namespace Business.Services
             };
 
             _context.Users.Add(newUser);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return Result<bool>.SuccessResult(true, Messages.UserRegistered);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_ATH_001");
+            return Result<bool>.SuccessResult(true, successRecord?.MessageTr ?? "");
         }
 
-        public Result<string> Login(LoginDto dto)
+        public async Task<Result<string>> Login(LoginDto dto)
         {
             var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
             if (user == null)
             {
-                return Result<string>.ErrorResult(Messages.UserNotFound);
+                throw new BusinessException("ERR_ATH_002");
             }
 
             // Kullanıcının hesabı 5 hatalı girişten dolayı kilitlenmiş mi
             if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.Now)
             {
                 string timeString = user.LockedUntil.Value.ToString("HH:mm");
-                return Result<string>.ErrorResult(string.Format(Messages.UserAccountLocked, timeString));
+               throw new BusinessException("ERR_ATH_003", timeString);
             }
 
            
             if (!user.IsActive)
             {
-                return Result<string>.ErrorResult(Messages.UserNotActive);
+               throw new BusinessException("ERR_ATH_004");
             }
 
             
@@ -86,23 +89,24 @@ namespace Business.Services
                 if (user.FailedLoginCount >= 5)
                 {
                     user.LockedUntil = DateTime.Now.AddMinutes(15);
-                    _context.SaveChanges();
-                    return Result<string>.ErrorResult(Messages.UserLockedDueToFailedAttempts);
+                    await _context.SaveChangesAsync();
+                    throw new BusinessException("ERR_ATH_005");
                 }
 
-                _context.SaveChanges();
-                return Result<string>.ErrorResult(Messages.PasswordError);
+               await _context.SaveChangesAsync();
+               throw new BusinessException("ERR_ATH_006");
             }
 
             // şifre baaşrılıysa sayaçlar sıfırlanır
             user.FailedLoginCount = 0;
             user.LockedUntil = null;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             string token = GenerateJwtToken(user);
 
             // Başarılıysa Data olarak token'ı veriyoruz
-            return Result<string>.SuccessResult(token, Messages.LoginSuccessful);
+            var successRecord = await _context.ErrorMessages.FirstOrDefaultAsync(m => m.ErrorCode == "SUC_ATH_002");
+            return Result<string>.SuccessResult(token, successRecord?.MessageTr ?? "");
         }
 
         // Token Üretme Metodu 

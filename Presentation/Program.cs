@@ -86,6 +86,8 @@ builder.Services.AddScoped<StockService>();
 
 var app = builder.Build();
 
+app.UseMiddleware<Middlewares.ExceptionMiddleware>();
+
 
 if (app.Environment.IsDevelopment())
 {
