@@ -9,6 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../services/auth.service';
+import { RegisterRequest } from '../../models/register-request.model';
 
 @Component({
   selector: 'app-register',
@@ -26,9 +27,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './register.css'
 })
 export class Register {
-  fullName = '';
-  email = '';
-  password = '';
+  registerRequest = new RegisterRequest();
   confirmPassword = '';
 
   constructor(
@@ -38,9 +37,9 @@ export class Register {
 
   register(): void {
     if (
-      !this.fullName.trim() ||
-      !this.email.trim() ||
-      !this.password ||
+      !this.registerRequest.fullName.trim() ||
+      !this.registerRequest.email.trim() ||
+      !this.registerRequest.password ||
       !this.confirmPassword
     ) {
       this.messageService.add({
@@ -53,7 +52,7 @@ export class Register {
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
+    if (this.registerRequest.password !== this.confirmPassword) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Şifre Hatası',
@@ -64,12 +63,14 @@ export class Register {
       return;
     }
 
+    this.registerRequest.fullName =
+      this.registerRequest.fullName.trim();
+
+    this.registerRequest.email =
+      this.registerRequest.email.trim();
+
     this.authService
-      .register(
-        this.fullName.trim(),
-        this.email.trim(),
-        this.password
-      )
+      .register(this.registerRequest)
       .subscribe({
         next: (response) => {
           this.messageService.add({
@@ -100,9 +101,7 @@ export class Register {
   }
 
   private clearForm(): void {
-    this.fullName = '';
-    this.email = '';
-    this.password = '';
+    this.registerRequest = new RegisterRequest();
     this.confirmPassword = '';
   }
 }

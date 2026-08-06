@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { LoginRequest, LoginResponse, RegisterRequest,RegisterResponse} from '../models/auth.models';
+import { LoginRequest } from '../models/login-request.model';
+import { LoginResponse } from '../models/login-response.model';
+import { RegisterRequest } from '../models/register-request.model';
+import { RegisterResponse } from '../models/register-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,29 +14,14 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<LoginResponse> {
-    const request: LoginRequest = {
-      email,
-      password
-    };
-
+  login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/login`,
       request
     );
   }
 
-  register(
-    fullName: string,
-    email: string,
-    password: string
-  ): Observable<RegisterResponse> {
-    const request: RegisterRequest = {
-      fullName,
-      email,
-      password
-    };
-
+  register(request: RegisterRequest): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
       `${this.apiUrl}/register`,
       request

@@ -1,5 +1,4 @@
 <p-toast position="top-right"></p-toast>
-
 <div class="register-page">
     <div class="register-card">
   
@@ -34,7 +33,7 @@
               pInputText
               id="fullName"
               type="text"
-              [(ngModel)]="fullName"
+              [(ngModel)]="registerRequest.fullName"
               placeholder="Adınızı ve soyadınızı girin"
               autocomplete="name"
             />
@@ -51,7 +50,7 @@
               pInputText
               id="email"
               type="email"
-              [(ngModel)]="email"
+              [(ngModel)]="registerRequest.email"
               placeholder="E-posta adresinizi girin"
               autocomplete="email"
             />
@@ -63,7 +62,7 @@
   
           <p-password
             inputId="password"
-            [(ngModel)]="password"
+            [(ngModel)]="registerRequest.password"
             [toggleMask]="true"
             [feedback]="false"
             placeholder="Şifrenizi girin"

@@ -32,10 +32,10 @@
             <input
               pInputText
               id="Email"
-              type="Email"
-              [(ngModel)]="Email"
+              type="email"
+              [(ngModel)]="loginRequest.email"
               placeholder="E-posta adresinizi girin"
-              autocomplete="Email"
+              autocomplete="email"
             />
           </span>
         </div>
@@ -45,7 +45,7 @@
   
           <p-password
             inputId="password"
-            [(ngModel)]="password"
+            [(ngModel)]="loginRequest.password"
             [toggleMask]="true"
             [feedback]="false"
             placeholder="Şifrenizi girin"

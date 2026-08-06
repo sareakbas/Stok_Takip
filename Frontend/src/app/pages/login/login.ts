@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../services/auth.service';
+import { LoginRequest } from '../../models/login-request.model';
 
 @Component({
   selector: 'app-login',
@@ -32,8 +33,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './login.css'
 })
 export class LoginComponent {
-  Email = '';
-  password = '';
+  loginRequest = new LoginRequest();
 
   constructor(
     private authService: AuthService,
@@ -42,7 +42,11 @@ export class LoginComponent {
   ) {}
 
   login(): void {
-    if (!this.Email.trim() || !this.password) {
+    if (
+      !this.loginRequest.email.trim() ||
+      !this.loginRequest.password
+    ) {
+      
       this.messageService.add({
         severity: 'warn',
         summary: 'Eksik Bilgi',
@@ -53,8 +57,10 @@ export class LoginComponent {
       return;
     }
 
+    this.loginRequest.email = this.loginRequest.email.trim();
+
     this.authService
-      .login(this.Email.trim(), this.password)
+      .login(this.loginRequest)
       .subscribe({
         next: (response) => {
           this.authService.saveToken(response.data);
