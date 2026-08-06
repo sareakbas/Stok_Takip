@@ -1,4 +1,4 @@
-.login-page {
+.register-page {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -9,10 +9,10 @@
       linear-gradient(135deg, #f7f8fa, #eef1f5);
   }
   
-  .login-card {
+  .register-card {
     width: 100%;
     max-width: 980px;
-    min-height: 590px;
+    min-height: 680px;
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
     overflow: hidden;
@@ -21,7 +21,7 @@
     box-shadow: 0 28px 70px rgba(24, 39, 55, 0.16);
   }
   
-  .login-visual {
+  .register-visual {
     position: relative;
     overflow: hidden;
     display: flex;
@@ -105,20 +105,20 @@
     color: rgba(255, 255, 255, 0.88);
   }
   
-  .login-form-area {
+  .register-form-area {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 58px 54px;
+    padding: 42px 54px;
   }
   
   .form-heading {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
   
   .form-tag {
     display: inline-flex;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 1.2px;
@@ -142,8 +142,8 @@
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 9px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 16px;
   }
   
   .form-group label {
@@ -174,7 +174,7 @@
   
   :host ::ng-deep .p-inputtext {
     width: 100%;
-    min-height: 52px;
+    min-height: 50px;
     border: 1px solid #e1e5ea;
     border-radius: 14px;
     background: #f8f9fb;
@@ -201,7 +201,7 @@
   
   :host ::ng-deep .password-field .p-password-input {
     width: 100%;
-    min-height: 52px;
+    min-height: 50px;
     border: 1px solid #e1e5ea;
     border-radius: 14px;
     background: #f8f9fb;
@@ -217,48 +217,11 @@
     color: #ff9518;
   }
   
-  .form-options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin: 2px 0 24px;
-  }
-  
-  .remember-me {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: #596773;
-    cursor: pointer;
-  }
-  
-  .remember-me input {
-    width: 16px;
-    height: 16px;
-    accent-color: #ff9417;
-  }
-  
-  .forgot-password {
-    padding: 0;
-    border: 0;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ff8a00;
-    background: transparent;
-    cursor: pointer;
-  }
-  
-  .forgot-password:hover {
-    text-decoration: underline;
-  }
-  
-  :host ::ng-deep .login-button {
+  :host ::ng-deep .register-button {
     width: 100%;
     min-height: 52px;
     justify-content: center;
+    margin-top: 6px;
     border: none;
     border-radius: 14px;
     font-weight: 700;
@@ -269,46 +232,45 @@
       box-shadow 0.2s ease;
   }
   
-  :host ::ng-deep .login-button:hover {
+  :host ::ng-deep .register-button:hover {
     transform: translateY(-1px);
     background: linear-gradient(135deg, #ffad34, #f77f00);
     box-shadow: 0 15px 28px rgba(255, 139, 0, 0.32);
   }
-
-  .register-link {
+  
+  .login-link {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    margin-top: 14px;
-    transform: translateY(-18px);
+    margin-top: 18px;
     font-size: 14px;
     color: #6b7280;
   }
   
-  .register-link a {
+  .login-link a {
     font-weight: 700;
     color: #ff8a00;
     text-decoration: none;
     transition: color 0.2s ease;
   }
   
-  .register-link a:hover {
+  .login-link a:hover {
     color: #e97800;
     text-decoration: underline;
   }
   
   @media (max-width: 820px) {
-    .login-page {
+    .register-page {
       padding: 18px;
     }
   
-    .login-card {
+    .register-card {
       max-width: 470px;
       grid-template-columns: 1fr;
     }
   
-    .login-visual {
+    .register-visual {
       min-height: 210px;
       padding: 28px;
     }
@@ -319,7 +281,7 @@
     }
   
     .visual-content h2 {
-      max-width: 330px;
+      max-width: 340px;
       font-size: 30px;
     }
   
@@ -327,41 +289,34 @@
       display: none;
     }
   
-    .login-form-area {
-      padding: 38px 30px 40px;
+    .register-form-area {
+      padding: 34px 30px 38px;
     }
   }
   
   @media (max-width: 480px) {
-    .login-page {
+    .register-page {
       align-items: flex-start;
       padding: 0;
       background: #ffffff;
     }
   
-    .login-card {
+    .register-card {
       min-height: 100vh;
       border-radius: 0;
       box-shadow: none;
     }
   
-    .login-visual {
+    .register-visual {
       min-height: 190px;
       border-radius: 0 0 42px 0;
     }
   
-    .login-form-area {
-      padding: 34px 22px;
+    .register-form-area {
+      padding: 30px 22px 34px;
     }
   
     .form-heading h1 {
       font-size: 29px;
     }
-  
-    .form-options {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 12px;
-    }
-
   }

@@ -22,7 +22,6 @@ namespace Middlewares
         {
             try
             {
-                // İstek geldi. Hiçbir şeye dokunma ve borudan ileriye (Controller'a) gönder.
                 await _next(context); 
             }
             catch (BusinessException ex)
@@ -39,14 +38,13 @@ namespace Middlewares
 
         private static async Task HandleBusinessExceptionAsync(HttpContext context, BusinessException ex)
         {
-            // 1. Veritabanı bağlantımızı (DbContext) güvenli bir şekilde çağırıyoruz
+            // 1. Veritabanı bağlantımızı güvenli bir şekilde çağırıyoruz
             using var scope = context.RequestServices.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<StokTakipDbContext>();
 
             // 2. Fırlatılan kodun ("ERR_STOCK_001") veritabanındaki karşılığını buluyoruz
             var errorRecord = await dbContext.ErrorMessages.FirstOrDefaultAsync(e => e.ErrorCode == ex.ErrorCode);
             
-            // Eğer veritabanında bulamazsak varsayılan bir mesaj, bulursak Türkçe mesajını alıyoruz
             string message = errorRecord != null ? errorRecord.MessageTr : "Bilinmeyen bir iş kuralı hatası oluştu.";
 
             if (ex.Parameters != null && ex.Parameters.Length > 0)
@@ -75,7 +73,7 @@ namespace Middlewares
             
             await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
-
+        ////
         private static async Task HandleSystemExceptionAsync(HttpContext context)
         {
             context.Response.ContentType = "application/json";

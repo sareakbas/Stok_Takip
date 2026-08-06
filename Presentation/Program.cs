@@ -84,6 +84,18 @@ builder.Services.AddScoped<SupplierService>();
 builder.Services.AddScoped<StockService>();
 
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 app.UseMiddleware<Middlewares.ExceptionMiddleware>();
@@ -97,6 +109,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("FrontendPolicy");
 
 app.UseAuthentication(); // Kimlik doğrulama
 app.UseAuthorization();  // Yetki doğrulama

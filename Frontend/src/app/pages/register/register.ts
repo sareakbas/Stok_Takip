@@ -1,52 +1,63 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
-import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { Button } from 'primeng/button';
-import { FloatLabel } from 'primeng/floatlabel';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
-    Card,
+    RouterLink,
     InputText,
     Password,
     Button,
-    FloatLabel,
-    RouterLink,
     ToastModule
   ],
   providers: [MessageService],
-  templateUrl: './login.html',
-  styleUrl: './login.css'
+  templateUrl: './register.html',
+  styleUrl: './register.css'
 })
-export class LoginComponent {
-  Email = '';
+export class Register {
+  fullName = '';
+  email = '';
   password = '';
+  confirmPassword = '';
 
   constructor(
     private authService: AuthService,
-    private router: Router,
     private messageService: MessageService
   ) {}
 
-  login(): void {
-    if (!this.Email.trim() || !this.password) {
+  register(): void {
+    if (
+      !this.fullName.trim() ||
+      !this.email.trim() ||
+      !this.password ||
+      !this.confirmPassword
+    ) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Eksik Bilgi',
-        detail: 'Lütfen e-posta ve şifre alanlarını doldurun.',
+        detail: 'Lütfen tüm alanları doldurun.',
+        life: 3000
+      });
+
+      return;
+    }
+
+    if (this.password !== this.confirmPassword) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Şifre Hatası',
+        detail: 'Şifreler birbiriyle eşleşmiyor.',
         life: 3000
       });
 
@@ -54,35 +65,44 @@ export class LoginComponent {
     }
 
     this.authService
-      .login(this.Email.trim(), this.password)
+      .register(
+        this.fullName.trim(),
+        this.email.trim(),
+        this.password
+      )
       .subscribe({
         next: (response) => {
-          this.authService.saveToken(response.data);
-
           this.messageService.add({
             severity: 'success',
-            summary: 'Giriş Başarılı',
-            detail: response.message || 'Sisteme başarıyla giriş yaptınız.',
-            life: 2000
+            summary: 'Kayıt Başarılı',
+            detail:
+              response.message ||
+              'Kullanıcı başarıyla kaydedildi.',
+            life: 3000
           });
 
-          setTimeout(() => {
-            this.router.navigate(['/dashboard']);
-          }, 1000);
+          this.clearForm();
         },
 
         error: (error) => {
           const errorMessage =
             error.error?.message ||
-            'Giriş işlemi gerçekleştirilemedi.';
+            'Kayıt işlemi gerçekleştirilemedi.';
 
           this.messageService.add({
             severity: 'error',
-            summary: 'Giriş Başarısız',
+            summary: 'Kayıt Başarısız',
             detail: errorMessage,
             life: 4000
           });
         }
       });
+  }
+
+  private clearForm(): void {
+    this.fullName = '';
+    this.email = '';
+    this.password = '';
+    this.confirmPassword = '';
   }
 }

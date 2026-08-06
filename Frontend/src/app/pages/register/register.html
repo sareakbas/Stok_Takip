@@ -1,0 +1,106 @@
+<p-toast position="top-right"></p-toast>
+
+<div class="register-page">
+    <div class="register-card">
+  
+      <div class="register-visual">
+        <div class="orange-shape"></div>
+  
+        <div class="brand-badge">
+          <i class="pi pi-box"></i>
+        </div>
+  
+        <div class="visual-content">
+          <span class="visual-label">ERP</span>
+          <h2>Stok yönetimine hemen başlayın</h2>
+          <p>Hesabınızı oluşturun, ürün ve stok hareketlerinizi tek panelden yönetin.</p>
+        </div>
+      </div>
+  
+      <div class="register-form-area">
+        <div class="form-heading">
+          <span class="form-tag">Kayıt</span>
+          <h1>Hesap Oluştur</h1>
+          <p>Devam etmek için bilgilerinizi eksiksiz doldurun.</p>
+        </div>
+  
+        <div class="form-group">
+          <label for="fullName">Ad Soyad</label>
+  
+          <span class="input-wrapper">
+            <i class="pi pi-user"></i>
+  
+            <input
+              pInputText
+              id="fullName"
+              type="text"
+              [(ngModel)]="fullName"
+              placeholder="Adınızı ve soyadınızı girin"
+              autocomplete="name"
+            />
+          </span>
+        </div>
+  
+        <div class="form-group">
+          <label for="email">E-posta</label>
+  
+          <span class="input-wrapper">
+            <i class="pi pi-envelope"></i>
+  
+            <input
+              pInputText
+              id="email"
+              type="email"
+              [(ngModel)]="email"
+              placeholder="E-posta adresinizi girin"
+              autocomplete="email"
+            />
+          </span>
+        </div>
+  
+        <div class="form-group">
+          <label for="password">Şifre</label>
+  
+          <p-password
+            inputId="password"
+            [(ngModel)]="password"
+            [toggleMask]="true"
+            [feedback]="false"
+            placeholder="Şifrenizi girin"
+            styleClass="password-field"
+            autocomplete="new-password"
+          >
+          </p-password>
+        </div>
+  
+        <div class="form-group">
+          <label for="confirmPassword">Şifre Tekrar</label>
+  
+          <p-password
+            inputId="confirmPassword"
+            [(ngModel)]="confirmPassword"
+            [toggleMask]="true"
+            [feedback]="false"
+            placeholder="Şifrenizi tekrar girin"
+            styleClass="password-field"
+            autocomplete="new-password"
+          >
+          </p-password>
+        </div>
+  
+        <p-button
+          label="Kayıt Ol"
+          icon="pi pi-user-plus"
+          (onClick)="register()"
+          styleClass="register-button"
+        >
+        </p-button>
+  
+        <div class="login-link">
+          <span>Zaten hesabınız var mı?</span>
+          <a routerLink="/">Giriş yapın</a>
+        </div>
+      </div>
+  
+    </div>
+  </div>

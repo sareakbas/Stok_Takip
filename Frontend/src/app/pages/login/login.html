@@ -1,36 +1,69 @@
+<p-toast position="top-right"></p-toast>
 <div class="login-page">
     <div class="login-card">
   
-      <div class="login-card-top">
-        <div class="logo-box">
-          <span class="logo-dot"></span>
+      <div class="login-visual">
+        <div class="orange-shape"></div>
+  
+        <div class="brand-badge">
+          <i class="pi pi-box"></i>
+        </div>
+  
+        <div class="visual-content">
+          <span class="visual-label">ERP</span>
+          <h2>Stoklarınızı kolayca yönetin</h2>
+          <p>Ürün, stok ve hareket takibini tek panelden kontrol edin.</p>
         </div>
       </div>
   
-      <div class="login-card-body">
-        <h1>ERP Stok Paneli</h1>
-        <p class="login-subtitle">Hesabınıza giriş yapın</p>
+      <div class="login-form-area">
+        <div class="form-heading">
+          <span class="form-tag">Giriş</span>
+          <h1>ERP Stok Paneli</h1>
+          <p>Devam etmek için hesabınıza giriş yapın.</p>
+        </div>
   
         <div class="form-group">
-          <label for="username">Kullanıcı Adı</label>
-          <input
-            pInputText
-            id="username"
-            [(ngModel)]="username"
-            placeholder="Kullanıcı adınızı girin"
-          />
+          <label for="Email">E-posta</label>
+  
+          <span class="input-wrapper">
+            <i class="pi pi-envelope"></i>
+  
+            <input
+              pInputText
+              id="Email"
+              type="Email"
+              [(ngModel)]="Email"
+              placeholder="E-posta adresinizi girin"
+              autocomplete="Email"
+            />
+          </span>
         </div>
   
         <div class="form-group">
           <label for="password">Şifre</label>
+  
           <p-password
             inputId="password"
             [(ngModel)]="password"
             [toggleMask]="true"
             [feedback]="false"
             placeholder="Şifrenizi girin"
+            styleClass="password-field"
+            autocomplete="current-password"
           >
           </p-password>
+        </div>
+  
+        <div class="form-options">
+          <label class="remember-me">
+            <input type="checkbox" />
+            <span>Beni hatırla</span>
+          </label>
+  
+          <button type="button" class="forgot-password">
+            Şifremi unuttum
+          </button>
         </div>
   
         <p-button
@@ -40,6 +73,11 @@
           styleClass="login-button"
         >
         </p-button>
+      </div>
+
+      <div class="register-link">
+        <span>Hesabınız yok mu?</span>
+        <a routerLink="/register">Kayıt olun</a>
       </div>
   
     </div>
